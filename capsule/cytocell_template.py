@@ -92,6 +92,7 @@ def replicate():
         child_dna = DNA.copy()
         child_dna["id"] = child_id
         child_dna["generation"] += 1
+        child_dna["parent"] = DNA["id"]  # 👈 Lineage link
 
         if random.random() < child_dna["mutation_chance"]:
             child_dna["lifespan"] = max(5, random.randint(10, 30))
@@ -114,6 +115,15 @@ def replicate():
 
         threading.Thread(target=launch).start()
 
+def generate_energy():
+    # Only cooperative cells contribute
+    if DNA["traits"].get("cooperative", False):
+        produced = random.randint(1, 20)  # You can tweak range
+        dish = load_dish()
+        dish["resources"] += produced
+        write_dish(dish)
+        log(f"Contributed {produced} energy to dish.")
+
 def die():
     log("Dying.")
     deregister_cell()
@@ -130,6 +140,7 @@ def run_lifecycle():
     try:
         while age < DNA["lifespan"] and DNA["energy"] > 0:
             metabolize()
+            generate_energy()
             replicate()
 
             if DNA["traits"].get("sleeper", False):
